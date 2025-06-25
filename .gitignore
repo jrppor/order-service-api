@@ -35,7 +35,7 @@ docker-compose.*
 .dockerignore
 
 # Jenkins
-Jenkinsfile*
+# Jenkinsfile*
 
 # OS files
 Thumbs.db
