@@ -1,5 +1,9 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'mcr.microsoft.com/dotnet/sdk:8.0'
+    }
+  }
 
   environment {
     ECR_REPO = '514141761577.dkr.ecr.ap-southeast-1.amazonaws.com/order-service-api'
