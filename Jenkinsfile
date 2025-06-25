@@ -10,33 +10,38 @@ pipeline {
   }
 
   stages {
-    stage('Restore & Build') {
-      agent {
-        docker { image 'mcr.microsoft.com/dotnet/sdk:8.0' }
-      }
+    stage('Docker Login') {
       steps {
-        sh 'dotnet restore OrderService.sln'
-        sh 'dotnet publish Order.API/Order.API.csproj -c Release -o publish'
+        withCredentials([usernamePassword(credentialsId: 'jenkins-ecr', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+          sh '''
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set default.region $AWS_REGION
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+          '''
+        }
       }
     }
 
-    stage('Docker Build & Push') {
-      steps {
-        sh "docker build -t $ECR_REPO:$IMAGE_TAG -f Order.API/Dockerfile ."
-        sh "docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest"
-        sh "docker push $ECR_REPO:$IMAGE_TAG"
-        sh "docker push $ECR_REPO:latest"
-      }
-    }
-
-    stage('Deploy to ECS') {
+    stage('Build & Push') {
       steps {
         sh """
-        aws ecs update-service \
-          --cluster $CLUSTER_NAME \
-          --service $SERVICE_NAME \
-          --force-new-deployment \
-          --region $AWS_REGION
+          docker build -t $ECR_REPO:$IMAGE_TAG -f Order.API/Dockerfile .
+          docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
+          docker push $ECR_REPO:$IMAGE_TAG
+          docker push $ECR_REPO:latest
+        """
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        sh """
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --force-new-deployment \
+            --region $AWS_REGION
         """
       }
     }
