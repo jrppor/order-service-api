@@ -8,16 +8,8 @@ pipeline {
     CLUSTER_NAME = 'dev-cluster'
     SERVICE_NAME = 'order-service-api'
   }
-  
 
   stages {
-    stage('Checkout') {
-      steps {
-        git branch: 'main',
-            url: 'https://github.com/jrppor/order-service-api.git'
-      }
-    }
-
     stage('Restore & Build') {
       steps {
         sh 'dotnet restore OrderService.sln'
