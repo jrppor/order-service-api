@@ -23,12 +23,16 @@ builder.Services.AddScoped<Order.Application.Interfaces.ICsvUploadService, Order
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// เปลี่ยนจาก
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// เป็น
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
