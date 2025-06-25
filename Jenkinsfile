@@ -1,8 +1,6 @@
 pipeline {
   agent {
-    docker {
-      image 'mcr.microsoft.com/dotnet/sdk:8.0'
-    }
+    docker { image 'mcr.microsoft.com/dotnet/sdk:8.0' }
   }
 
   environment {
@@ -23,7 +21,6 @@ pipeline {
 
     stage('Docker Build & Push') {
       steps {
-        sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
         sh "docker build -t $ECR_REPO:$IMAGE_TAG -f Order.API/Dockerfile ."
         sh "docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest"
         sh "docker push $ECR_REPO:$IMAGE_TAG"
@@ -44,3 +41,4 @@ pipeline {
     }
   }
 }
+
