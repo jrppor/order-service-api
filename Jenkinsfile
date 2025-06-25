@@ -1,7 +1,5 @@
 pipeline {
-  agent {
-    docker { image 'mcr.microsoft.com/dotnet/sdk:8.0' }
-  }
+  agent any
 
   environment {
     ECR_REPO = '514141761577.dkr.ecr.ap-southeast-1.amazonaws.com/order-service-api'
@@ -13,6 +11,9 @@ pipeline {
 
   stages {
     stage('Restore & Build') {
+      agent {
+        docker { image 'mcr.microsoft.com/dotnet/sdk:8.0' }
+      }
       steps {
         sh 'dotnet restore OrderService.sln'
         sh 'dotnet publish Order.API/Order.API.csproj -c Release -o publish'
@@ -41,4 +42,3 @@ pipeline {
     }
   }
 }
-
