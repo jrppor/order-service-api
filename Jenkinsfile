@@ -40,7 +40,7 @@ pipeline {
                 mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash -c "
                   dotnet tool install --global dotnet-sonarscanner &&
                   export PATH=$PATH:/root/.dotnet/tools &&
-                  dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=http://sonarqube:9000 /d:sonar.token=$SONAR_TOKEN &&
+                  dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=http://host.docker.internal:9000 /d:sonar.token=$SONAR_TOKEN &&
                   dotnet build OrderService.sln &&
                   dotnet sonarscanner end
                 "
