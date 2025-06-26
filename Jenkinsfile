@@ -34,23 +34,23 @@ pipeline {
       steps {
         withSonarQubeEnv('SonarQube') {
           withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
-            sh '''
-              echo "[DEBUG] SONAR_TOKEN: $SONAR_TOKEN"
-              
+            sh """
               docker run --rm \
-                -v $PWD:/src -w /src \
+                -v \$PWD:/src -w /src \
+                -e SONAR_TOKEN=${SONAR_TOKEN} \
                 mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash -c '
-                  export PATH=$PATH:/root/.dotnet/tools &&
+                  export PATH=\$PATH:/root/.dotnet/tools &&
                   dotnet tool install --global dotnet-sonarscanner &&
-                  dotnet sonarscanner begin /k:"order-service-api" /d:sonar.host.url=http://host.docker.internal:9000 /d:sonar.token=$SONAR_TOKEN &&
+                  dotnet sonarscanner begin /k:"order-service-api" /d:sonar.host.url=http://host.docker.internal:9000 /d:sonar.token=\$SONAR_TOKEN &&
                   dotnet build OrderService.sln &&
                   dotnet sonarscanner end
                 '
-            '''
+            """
           }
         }
       }
     }
+
 
 
 
