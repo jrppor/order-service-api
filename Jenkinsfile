@@ -47,7 +47,7 @@ pipeline {
                   export PATH=$PATH:/root/.dotnet/tools &&
                   dotnet tool install --global dotnet-sonarscanner &&
                   dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=http://host.docker.internal:9000 /d:sonar.token=$SONAR_TOKEN &&
-                  dotnet build Order.API/OrderService.sln &&
+                  dotnet build OrderService.sln &&
                   dotnet sonarscanner end
                 "
             '''
