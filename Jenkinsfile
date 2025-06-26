@@ -33,44 +33,43 @@ pipeline {
     stage('SonarQube Scan') {
       steps {
         withSonarQubeEnv('SonarQube') {
-          sh '''
-            docker run --rm \
-              -v $(pwd):/src \
-              -w /src \
-              mcr.microsoft.com/dotnet/sdk:8.0 \
-              /bin/bash -c "
-                dotnet tool install --global dotnet-sonarscanner &&
-                export PATH=\$PATH:/root/.dotnet/tools &&
-                dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=$SONAR_HOST_URL /d:sonar.token=$SONAR_AUTH_TOKEN &&
-                dotnet build OrderService.sln &&
-                dotnet sonarscanner end
-              "
-          '''
+          withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
+            sh '''
+              docker run --rm \
+                -v $PWD:/src -w /src \
+                mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash -c "
+                  dotnet tool install --global dotnet-sonarscanner &&
+                  export PATH=$PATH:/root/.dotnet/tools &&
+                  dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=http://sonarqube:9000 /d:sonar.token=$SONAR_TOKEN &&
+                  dotnet build OrderService.sln &&
+                  dotnet sonarscanner end
+                "
+            '''
+          }
         }
       }
     }
 
-
     stage('Docker Build & Push') {
       steps {
-        sh '''
+        sh """
           docker build -t $ECR_REPO:$IMAGE_TAG -f Order.API/Dockerfile .
           docker tag $ECR_REPO:$IMAGE_TAG $ECR_REPO:latest
           docker push $ECR_REPO:$IMAGE_TAG
           docker push $ECR_REPO:latest
-        '''
+        """
       }
     }
 
     stage('Deploy to ECS') {
       steps {
-        sh '''
+        sh """
           aws ecs update-service \
             --cluster $CLUSTER_NAME \
             --service $SERVICE_NAME \
             --force-new-deployment \
             --region $AWS_REGION
-        '''
+        """
       }
     }
   }
