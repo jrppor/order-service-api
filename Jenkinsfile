@@ -35,16 +35,23 @@ pipeline {
         withSonarQubeEnv('SonarQube') {
           withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
             sh '''
+              echo "[DEBUG] ls root:"
+              ls -la
+              
+              echo "[DEBUG] check if OrderService.sln exists"
+              if [ -f "./OrderService.sln" ]; then echo "FOUND"; else echo "NOT FOUND"; fi
+              
               docker run --rm \
                 -v $WORKSPACE:/src \
                 -w /src \
                 -e SONAR_TOKEN=$SONAR_TOKEN \
                 mcr.microsoft.com/dotnet/sdk:8.0 \
                 bash -c "
+                  echo '[DEBUG] ls -la /src:' && ls -la /src &&
                   export PATH=$PATH:/root/.dotnet/tools &&
                   dotnet tool install --global dotnet-sonarscanner &&
                   dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=http://host.docker.internal:9000 /d:sonar.token=$SONAR_TOKEN &&
-                  dotnet build OrderService.sln &&
+                  dotnet build /src/OrderService.sln &&
                   dotnet sonarscanner end
                 "
             '''
@@ -52,6 +59,7 @@ pipeline {
         }
       }
     }
+
 
 
 
