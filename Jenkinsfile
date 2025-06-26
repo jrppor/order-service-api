@@ -35,16 +35,19 @@ pipeline {
         withSonarQubeEnv('SonarQube') {
           withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
             sh '''
+              echo "WORKSPACE: $WORKSPACE"
+              ls -R $WORKSPACE
+
               docker run --rm \
                 -v $WORKSPACE:/src -w /src \
                 -e SONAR_TOKEN=$SONAR_TOKEN \
                 mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash -c "
-                  echo '[DEBUG] List files in mounted path:'
-                  ls -la &&
+                  echo '[DEBUG] List files in /src:' &&
+                  ls -la /src &&
                   export PATH=$PATH:/root/.dotnet/tools &&
                   dotnet tool install --global dotnet-sonarscanner &&
                   dotnet sonarscanner begin /k:'order-service-api' /d:sonar.host.url=http://host.docker.internal:9000 /d:sonar.token=$SONAR_TOKEN &&
-                  dotnet build OrderService.sln &&
+                  dotnet build Order.API/OrderService.sln &&
                   dotnet sonarscanner end
                 "
             '''
@@ -52,10 +55,6 @@ pipeline {
         }
       }
     }
-
-
-
-
 
     stage('Docker Build & Push') {
       steps {
