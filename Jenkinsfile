@@ -35,14 +35,11 @@ pipeline {
         withSonarQubeEnv('SonarQube') {
           withCredentials([string(credentialsId: 'SONAR_AUTH_TOKEN', variable: 'SONAR_TOKEN')]) {
             sh '''
-              echo "WORKSPACE: $WORKSPACE"
-              ls -R $WORKSPACE
-
               docker run --rm \
-                -v $WORKSPACE:/src -w /src \
+                -v $(pwd):/src -w /src \
                 -e SONAR_TOKEN=$SONAR_TOKEN \
                 mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash -c "
-                  echo '[DEBUG] List files in /src:' &&
+                  echo '[DEBUG] List files in /src:'
                   ls -la /src &&
                   export PATH=$PATH:/root/.dotnet/tools &&
                   dotnet tool install --global dotnet-sonarscanner &&
@@ -55,6 +52,7 @@ pipeline {
         }
       }
     }
+
 
     stage('Docker Build & Push') {
       steps {
