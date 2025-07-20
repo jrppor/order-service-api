@@ -28,16 +28,46 @@ namespace Order.Infrastructure.Messaging
 
         public void Publish(EmailRecordDto dto)
         {
-            var factory = new ConnectionFactory() { HostName = _hostName };
+            // สร้าง Connection ไปยัง RabbitMQ
+            var factory = new ConnectionFactory { HostName = _hostName };
+
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            channel.ExchangeDeclare(_exchange, ExchangeType.Direct);
-            channel.QueueDeclare(_queue, durable: true, exclusive: false, autoDelete: false);
-            channel.QueueBind(_queue, _exchange, _routingKey);
+            // ประกาศ Exchange และ Queue
+            channel.ExchangeDeclare(
+                exchange: _exchange,
+                type: ExchangeType.Direct,
+                durable: true
+            );
 
-            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dto));
-            channel.BasicPublish(_exchange, _routingKey, null, body);
+            channel.QueueDeclare(
+                queue: _queue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false
+            );
+
+            channel.QueueBind(
+                queue: _queue,
+                exchange: _exchange,
+                routingKey: _routingKey
+            );
+
+            // แปลง DTO เป็น JSON และเป็น byte[]
+            var messageJson = JsonSerializer.Serialize(dto);
+            var messageBody = Encoding.UTF8.GetBytes(messageJson);
+
+            // ส่งข้อความเข้า Exchange
+            channel.BasicPublish(
+                exchange: _exchange,
+                routingKey: _routingKey,
+                basicProperties: null,
+                body: messageBody
+            );
+
+            Console.WriteLine($"📤 Published to '{_exchange}' with routingKey '{_routingKey}': {messageJson}");
         }
+
     }
 }
